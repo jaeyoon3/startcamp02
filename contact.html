@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>연락처 | 박재윤 포트폴리오</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <!-- 초기 테마 로딩 플래시 방지 스크립트 -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    
+    <style>
+        /* 커스텀 마우스 포인터 적용 시 기본 커서 숨김 (데스크톱 전용) */
+        @media (min-width: 768px) {
+            body, a, button, [role="button"], .cursor-pointer {
+                cursor: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased bg-gradient-to-b from-[#edf4fe] via-[#f1f5f9] to-[#f8fafc] dark:from-[#0b0f19] dark:via-[#111827] dark:to-[#0f172a] text-[#1e293b] dark:text-slate-200 transition-colors duration-300">
+
+    <div id="scroll-progress" class="fixed top-0 left-0 w-0 h-1 bg-[#0064ff] dark:bg-blue-500 z-[100] transition-all duration-75"></div>
+
+    <div id="custom-cursor-dot" class="fixed w-2.5 h-2.5 bg-[#0064ff] dark:bg-blue-400 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 transition-transform duration-75 hidden md:block"></div>
+    <div id="custom-cursor-outline" class="fixed w-8 h-8 border-2 border-[#0064ff]/40 dark:border-blue-400/40 rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-out hidden md:block"></div>
+
+    <canvas id="particle-canvas" class="fixed inset-0 -z-10 pointer-events-none"></canvas>
+
+    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors duration-300">
+        <div class="max-w-xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="index.html" class="font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                <span class="text-[#0064ff] dark:text-blue-500"><i class="fa-solid fa-microchip"></i></span> JAYOUN.P
+            </a>
+            <div class="flex items-center gap-4">
+                <div class="flex gap-1 text-sm font-medium">
+                    <a href="index.html" class="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">프로필</a>
+                    <a href="experience.html" class="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">경험 & 역량</a>
+                    <!-- 현재 페이지 활성화 -->
+                    <a href="contact.html" aria-current="page" class="px-3 py-2 rounded-lg text-[#0064ff] dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40 font-semibold">연락처</a>
+                </div>
+                <!-- Dark Mode Toggle Button -->
+                <button id="theme-toggle" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
+                    <i id="theme-toggle-icon" class="fa-solid fa-moon text-base"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-xl w-full mx-auto px-6 py-12 flex-grow flex flex-col justify-center gap-8 z-10">
+        
+        <header>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Contact</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">함께 성장하고 시너지를 낼 수 있는 연락을 기다립니다.</p>
+        </header>
+
+        <!-- 핵심 목표 강조 리마인드 -->
+        <div class="flex flex-col gap-2 pl-4 border-l-4 border-rose-500 bg-white/70 dark:bg-slate-900/40 p-5 rounded-r-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm transition-colors duration-300">
+            <span class="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1">
+                <i class="fa-solid fa-bullseye"></i> 올해의 핵심 목표
+            </span>
+            <p class="text-sm font-semibold text-[#0064ff] dark:text-blue-400 flex items-center gap-1.5 bg-blue-50/50 dark:bg-blue-950/20 p-2 rounded-lg border border-blue-100/60 dark:border-blue-900/40 w-fit">
+                올해 안에 좋은 팀을 만나 취업 성공하기
+            </p>
+        </div>
+
+        <!-- 연락처 목록 -->
+        <div class="bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,100,255,0.03)] flex flex-col gap-4 transition-colors duration-300">
+            
+            <!-- 이메일 링크 -->
+            <div class="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-800/60">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-[#0064ff] dark:text-blue-400"><i class="fa-regular fa-envelope text-base"></i></span>
+                    <div>
+                        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase block">Email</span>
+                        <span class="text-sm text-slate-700 dark:text-slate-300 font-medium">example@email.com</span>
+                    </div>
+                </div>
+                <a href="mailto:example@email.com" class="text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-[#0064ff] dark:hover:text-blue-400 underline underline-offset-4">보내기</a>
+            </div>
+
+            <!-- 깃허브 링크 -->
+            <div class="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-800/60">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-lg bg-slate-900 dark:bg-slate-950 flex items-center justify-center text-white"><i class="fa-brands fa-github text-base"></i></span>
+                    <div>
+                        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase block">GitHub</span>
+                        <span class="text-sm text-slate-700 dark:text-slate-300 font-medium">github.com/jaeyoun</span>
+                    </div>
+                </div>
+                <a href="#" target="_blank" class="text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white underline underline-offset-4">방문하기</a>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- [공통 컴포넌트] 푸터 -->
+    <footer class="py-6 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950 transition-colors duration-300">
+        <p>&copy; 2026 박재윤. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        function updateIcon() {
+            if (document.documentElement.classList.contains('dark')) {
+                themeToggleIcon.className = 'fa-solid fa-sun text-base text-amber-400';
+            } else {
+                themeToggleIcon.className = 'fa-solid fa-moon text-base';
+            }
+        }
+        updateIcon();
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            updateIcon();
+        });
+
+        window.addEventListener('scroll', () => {
+            const scrollBar = document.getElementById('scroll-progress');
+            const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+            if (totalScroll > 0) {
+                const scrolled = (window.scrollY / totalScroll) * 100;
+                scrollBar.style.width = scrolled + '%';
+            } else {
+                scrollBar.style.width = '0%';
+            }
+        });
+
+        const cursorDot = document.getElementById('custom-cursor-dot');
+        const cursorOutline = document.getElementById('custom-cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+            
+            cursorOutline.animate({
+                left: `${e.clientX}px`,
+                top: `${e.clientY}px`
+            }, { duration: 240, fill: 'forwards' });
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursorDot.style.opacity = '0';
+            cursorOutline.style.opacity = '0';
+        });
+        document.addEventListener('mouseenter', () => {
+            cursorDot.style.opacity = '1';
+            cursorOutline.style.opacity = '1';
+        });
+
+        const interactives = document.querySelectorAll('a, button, .cursor-pointer');
+        interactives.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorOutline.classList.add('scale-150', 'bg-[#0064ff]/10', 'dark:bg-blue-400/10', 'border-[#0064ff]', 'dark:border-blue-400');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorOutline.classList.remove('scale-150', 'bg-[#0064ff]/10', 'dark:bg-blue-400/10', 'border-[#0064ff]', 'dark:border-blue-400');
+            });
+        });
+
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        const maxParticles = 60;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.radius = Math.random() * 3 + 1.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                const isDark = document.documentElement.classList.contains('dark');
+                ctx.fillStyle = isDark ? 'rgba(59, 130, 246, 0.6)' : 'rgba(0, 100, 255, 0.4)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < maxParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const isDark = document.documentElement.classList.contains('dark');
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 120) {
+                        ctx.strokeStyle = isDark 
+                            ? `rgba(59, 130, 246, ${0.4 * (1 - dist / 120)})` 
+                            : `rgba(0, 100, 255, ${0.25 * (1 - dist / 120)})`;
+                        ctx.lineWidth = 1.0;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        window.onload = function() {
+            animateParticles();
+        };
+    </script>
+</body>
+</html>
