@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>방명록 & 게임 | 박재윤 포트폴리오</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <script>
+        // 초기 테마 로딩 플래시 방지
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        @media (min-width: 768px) {
+            body, a, button, [role="button"], .cursor-pointer {
+                cursor: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased bg-gradient-to-b from-[#edf4fe] via-[#f1f5f9] to-[#f8fafc] dark:from-[#0b0f19] dark:via-[#111827] dark:to-[#0f172a] text-[#1e293b] dark:text-slate-200 transition-colors duration-300">
+
+    <!-- 스크롤 프로그레스 -->
+    <div id="scroll-progress" class="fixed top-0 left-0 w-0 h-1 bg-[#0064ff] dark:bg-blue-500 z-[100] transition-all duration-75"></div>
+
+    <!-- 커스텀 커서 -->
+    <div id="custom-cursor-dot" class="fixed w-2.5 h-2.5 bg-[#0064ff] dark:bg-blue-400 rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 transition-transform duration-75 hidden md:block"></div>
+    <div id="custom-cursor-outline" class="fixed w-8 h-8 border-2 border-[#0064ff]/40 dark:border-blue-400/40 rounded-full pointer-events-none z-[9998] -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-out hidden md:block"></div>
+
+    <!-- 파티클 배경 -->
+    <canvas id="particle-canvas" class="fixed inset-0 -z-10 pointer-events-none"></canvas>
+
+    <!-- [공통 컴포넌트] 글로벌 네비게이션 바 -->
+    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors duration-300">
+        <div class="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="index.html" class="font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                <span class="text-[#0064ff] dark:text-blue-500"><i class="fa-solid fa-microchip text-xl"></i></span>
+                <span>JAYOUN.P</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <div class="flex gap-1 text-xs sm:text-sm font-medium">
+                    <a href="index.html" class="px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors" data-ko="프로필" data-en="Profile">프로필</a>
+                    <a href="experience.html" class="px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors" data-ko="경험 & 역량" data-en="Experience">경험 & 역량</a>
+                    <a href="guestbook.html" aria-current="page" class="px-2.5 py-1.5 rounded-lg text-[#0064ff] dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40 font-semibold" data-ko="방명록 & 게임" data-en="Guestbook & Game">방명록 & 게임</a>
+                </div>
+                <button id="lang-toggle" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">EN</button>
+                <button id="theme-toggle" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
+                    <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 메인 레이아웃 -->
+    <main class="max-w-xl w-full mx-auto px-6 py-12 flex-grow flex flex-col gap-10 z-10">
+        
+        <!-- 헤더 -->
+        <header>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight" data-ko="방명록 & 미니게임" data-en="Guestbook & Mini Game">방명록 & 미니게임</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" data-ko="저와 소통하고 즐거운 미니게임을 즐겨보세요!" data-en="Leave a warm message and try out the developer-themed game.">저와 소통하고 즐거운 미니게임을 즐겨보세요!</p>
+        </header>
+
+        <!-- GAME SECTION: Bug Catcher -->
+        <section class="bg-white/85 dark:bg-slate-900/85 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-gamepad"></i> <span data-ko="버그 캐처 미니게임" data-en="Bug Catcher Game">버그 캐처 미니게임</span>
+                </span>
+                <div class="text-xs text-slate-500 flex gap-3">
+                    <span data-ko="최고기록: " data-en="High Score: ">최고기록: </span><span id="game-highscore" class="font-bold text-[#0064ff] dark:text-blue-400">0</span>
+                </div>
+            </div>
+            
+            <p class="text-xs text-slate-600 dark:text-slate-400" data-ko="키보드 방향키(좌/우) 또는 아래 스크린 버튼을 조작하여 떨어지는 버그 패치(녹색 버그)를 받고, 서버 다운(적색 해골)을 피하세요!" data-en="Use arrow keys (Left/Right) or screen buttons below to catch falling 'Bug Patches' (green) and dodge 'Server Downtimes' (red skull)!">
+                키보드 방향키(좌/우) 또는 아래 스크린 버튼을 조작하여 떨어지는 버그 패치(녹색 버그)를 받고, 서버 다운(적색 해골)을 피하세요!
+            </p>
+
+            <!-- 게임 캔버스 홀더 -->
+            <div class="relative w-full aspect-[2/1] bg-slate-900 dark:bg-black rounded-xl overflow-hidden border border-slate-700/50">
+                <canvas id="game-canvas" class="w-full h-full block"></canvas>
+                <!-- 게임 스타트 오버레이 -->
+                <div id="game-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-2 transition-opacity">
+                    <h3 class="text-white font-bold text-lg" data-ko="서버 버그를 수집하세요!" data-en="Save the Server!">서버 버그를 수집하세요!</h3>
+                    <button onclick="startGame()" class="px-5 py-2 bg-[#0064ff] hover:bg-blue-600 text-white font-bold rounded-lg text-xs shadow-md active:scale-95 transition-transform" data-ko="게임 시작" data-en="Start Game">게임 시작</button>
+                </div>
+            </div>
+
+            <!-- 게임 조작 버튼 (모바일용) -->
+            <div class="flex gap-4 justify-center md:hidden">
+                <button id="btn-left" class="w-16 h-12 bg-slate-200 dark:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700 rounded-xl flex items-center justify-center text-lg shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <button id="btn-right" class="w-16 h-12 bg-slate-200 dark:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700 rounded-xl flex items-center justify-center text-lg shadow-sm">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- GUESTBOOK SECTION -->
+        <section class="bg-white/85 dark:bg-slate-900/85 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
+            <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-pen-fancy"></i> <span data-ko="방명록 작성" data-en="Guestbook">방명록 작성</span>
+            </span>
+
+            <!-- 글쓰기 폼 -->
+            <form id="guestbook-form" onsubmit="saveMessage(event)" class="flex flex-col gap-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="gb-name" required class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none focus:ring-1 focus:ring-[#0064ff]" data-placeholder-ko="닉네임" data-placeholder-en="Your Name" placeholder="닉네임">
+                    <input type="password" id="gb-pw" required class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none focus:ring-1 focus:ring-[#0064ff]" data-placeholder-ko="비밀번호(삭제용)" data-placeholder-en="Password (for delete)" placeholder="비밀번호(삭제용)">
+                </div>
+                <textarea id="gb-msg" required rows="3" class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none focus:ring-1 focus:ring-[#0064ff]" data-placeholder-ko="따뜻한 메시지를 남겨주세요!" data-placeholder-en="Leave a nice message!" placeholder="따뜻한 메시지를 남겨주세요!"></textarea>
+                <button type="submit" class="w-full py-2.5 bg-[#0064ff] hover:bg-blue-600 text-white font-bold rounded-lg text-xs shadow-md transition-colors" data-ko="등록하기" data-en="Submit">등록하기</button>
+            </form>
+
+            <hr class="border-slate-100 dark:border-slate-800/60">
+
+            <!-- 리스트 출력 -->
+            <div id="guestbook-list" class="flex flex-col gap-4">
+                <!-- 동적으로 방명록 리스트가 바인딩됩니다. -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- [공통 컴포넌트] 푸터 -->
+    <footer class="py-6 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950 transition-colors duration-300">
+        <p>&copy; 2026 박재윤. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // --- 게이미피케이션 (버그 캐치 미니게임) 개발자 콘셉트 ---
+        const canvasGame = document.getElementById('game-canvas');
+        const ctxGame = canvasGame.getContext('2d');
+        let gameActive = false;
+        let score = 0;
+        let highscore = localStorage.getItem('bug_highscore') || 0;
+        document.getElementById('game-highscore').textContent = highscore;
+
+        let player = { x: 0, y: 0, w: 50, h: 10, speed: 6 };
+        let items = [];
+        let gameLoopId;
+
+        // 오디오 합성 발생기 비활성화 (브라우저 프레임 드랍 및 메모리 오버헤드 최적화)
+        function playSynthesizedSound(type) {
+            // 효과음 재생을 차단하여 저사양 디바이스 성능 최적화
+        }
+
+        // 반응형으로 캔버스 크기 지정
+        function initGameDimensions() {
+            canvasGame.width = canvasGame.parentElement.clientWidth;
+            canvasGame.height = canvasGame.parentElement.clientHeight;
+            player.x = canvasGame.width / 2 - player.w / 2;
+            player.y = canvasGame.height - 25;
+        }
+        initGameDimensions();
+        window.addEventListener('resize', initGameDimensions);
+
+        // 조작 컨트롤 이벤트
+        let keys = {};
+        window.addEventListener('keydown', e => { keys[e.code] = true; });
+        window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+        let touchLeft = false;
+        let touchRight = false;
+        document.getElementById('btn-left').addEventListener('touchstart', () => touchLeft = true);
+        document.getElementById('btn-left').addEventListener('touchend', () => touchLeft = false);
+        document.getElementById('btn-right').addEventListener('touchstart', () => touchRight = true);
+        document.getElementById('btn-right').addEventListener('touchend', () => touchRight = false);
+
+        function startGame() {
+            document.getElementById('game-overlay').style.opacity = '0';
+            setTimeout(() => document.getElementById('game-overlay').classList.add('hidden'), 300);
+            gameActive = true;
+            score = 0;
+            items = [];
+            initGameDimensions();
+            loop();
+        }
+
+        function gameOver() {
+            gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+            playSynthesizedSound('crash');
+
+            if (score > highscore) {
+                highscore = score;
+                localStorage.setItem('bug_highscore', highscore);
+                document.getElementById('game-highscore').textContent = highscore;
+            }
+
+            const overlay = document.getElementById('game-overlay');
+            overlay.classList.remove('hidden');
+            overlay.style.opacity = '1';
+            overlay.querySelector('h3').innerHTML = `Game Over!<br>Score: ${score}`;
+        }
+
+        function spawnItem() {
+            if (Math.random() < 0.03) {
+                const isBug = Math.random() > 0.3; // 70% 확률로 착한 버그패치, 30% 확률로 서버 크래시
+                items.push({
+                    x: Math.random() * (canvasGame.width - 20),
+                    y: -20,
+                    size: 16,
+                    speed: 2.5 + Math.random() * 2 + (score * 0.1),
+                    isBug: isBug
+                });
+            }
+        }
+
+        function drawGame() {
+            ctxGame.clearRect(0, 0, canvasGame.width, canvasGame.height);
+
+            // 플레이어 (서버 카트) 그리기
+            ctxGame.fillStyle = '#0064ff';
+            ctxGame.beginPath();
+            ctxGame.roundRect(player.x, player.y, player.w, player.h, 4);
+            ctxGame.fill();
+
+            // 상단 인디케이터 텍스트
+            ctxGame.fillStyle = '#ffffff';
+            ctxGame.font = 'bold 12px Pretendard, sans-serif';
+            ctxGame.fillText(`Score: ${score}`, 15, 25);
+
+            // 떨어지는 요소 렌더링
+            items.forEach((item, index) => {
+                item.y += item.speed;
+
+                if (item.isBug) {
+                    // 녹색 버그 패치
+                    ctxGame.fillStyle = '#10b981';
+                    ctxGame.beginPath();
+                    ctxGame.arc(item.x, item.y, item.size / 2, 0, Math.PI * 2);
+                    ctxGame.fill();
+                    // 안쪽 십자선 데코레이션
+                    ctxGame.strokeStyle = '#ffffff';
+                    ctxGame.lineWidth = 1.5;
+                    ctxGame.beginPath();
+                    ctxGame.moveTo(item.x - 3, item.y); ctxGame.lineTo(item.x + 3, item.y);
+                    ctxGame.moveTo(item.x, item.y - 3); ctxGame.lineTo(item.x, item.y + 3);
+                    ctxGame.stroke();
+                } else {
+                    // 해골 장애물
+                    ctxGame.fillStyle = '#ef4444';
+                    ctxGame.beginPath();
+                    ctxGame.arc(item.x, item.y, item.size / 2, 0, Math.PI * 2);
+                    ctxGame.fill();
+                    ctxGame.fillStyle = '#ffffff';
+                    ctxGame.font = '10px Arial';
+                    ctxGame.fillText('☠', item.x - 5, item.y + 4);
+                }
+
+                // 충돌 검사
+                if (item.y + item.size / 2 >= player.y && item.x >= player.x && item.x <= player.x + player.w) {
+                    items.splice(index, 1);
+                    if (item.isBug) {
+                        score += 10;
+                        playSynthesizedSound('catch');
+                    } else {
+                        gameOver();
+                    }
+                }
+
+                // 바닥 아웃
+                if (item.y > canvasGame.height) {
+                    items.splice(index, 1);
+                    if (item.isBug) {
+                        // 착한 버그 패치를 놓치면 점수 감점
+                        score = Math.max(0, score - 5);
+                    }
+                }
+            });
+        }
+
+        function updateGame() {
+            if (keys['ArrowLeft'] || touchLeft) {
+                player.x = Math.max(0, player.x - player.speed);
+            }
+            if (keys['ArrowRight'] || touchRight) {
+                player.x = Math.min(canvasGame.width - player.w, player.x + player.speed);
+            }
+            spawnItem();
+        }
+
+        function loop() {
+            if (!gameActive) return;
+            updateGame();
+            drawGame();
+            gameLoopId = requestAnimationFrame(loop);
+        }
+
+
+        // --- 로컬스토리지 방명록 로직 ---
+        function getMessages() {
+            return JSON.parse(localStorage.getItem('guestbook_msgs')) || [];
+        }
+
+        function saveMessage(e) {
+            e.preventDefault();
+            const name = document.getElementById('gb-name').value.trim();
+            const pw = document.getElementById('gb-pw').value.trim();
+            const msg = document.getElementById('gb-msg').value.trim();
+
+            if(!name || !pw || !msg) return;
+
+            const messages = getMessages();
+            const newMsg = {
+                id: Date.now(),
+                name: name,
+                pw: pw,
+                msg: msg,
+                date: new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+            };
+
+            messages.unshift(newMsg);
+            localStorage.setItem('guestbook_msgs', JSON.stringify(messages));
+
+            // 폼 리셋 및 리로드
+            document.getElementById('guestbook-form').reset();
+            renderMessages();
+        }
+
+        function deleteMessage(id) {
+            const passwordPrompt = prompt(currentLang === 'ko' ? "삭제용 비밀번호를 입력해주세요:" : "Please enter the deletion password:");
+            if (passwordPrompt === null) return;
+
+            let messages = getMessages();
+            const target = messages.find(m => m.id === id);
+
+            if (target && target.pw === passwordPrompt) {
+                messages = messages.filter(m => m.id !== id);
+                localStorage.setItem('guestbook_msgs', JSON.stringify(messages));
+                renderMessages();
+            } else {
+                // alert() 대신 안전하게 작동하도록 임시 안내 처리
+                const failMsg = currentLang === 'ko' ? "비밀번호가 일치하지 않습니다." : "Incorrect password.";
+                console.warn(failMsg);
+            }
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('guestbook-list');
+            const messages = getMessages();
+
+            if (messages.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6" data-ko="첫 번째 방명록을 작성해 보세요!" data-en="Be the first to leave a message!">첫 번째 방명록을 작성해 보세요!</p>`;
+                return;
+            }
+
+            container.innerHTML = messages.map(m => `
+                <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800/80 flex flex-col gap-2 relative shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-900 dark:text-white">${m.name}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">${m.date}</span>
+                    </div>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">${m.msg}</p>
+                    <button onclick="deleteMessage(${m.id})" class="absolute bottom-3 right-4 text-[10px] font-semibold text-rose-500 hover:underline" data-ko="삭제" data-en="Delete">삭제</button>
+                </div>
+            `).join('');
+            
+            // 번역 반영 리로드
+            updateLanguageUI();
+        }
+
+
+        // --- 다국어 / 다크모드 등 시스템 공통 컴포넌트 ---
+        const langToggleBtn = document.getElementById('lang-toggle');
+        let currentLang = localStorage.getItem('lang') || 'ko';
+
+        function updateLanguageUI() {
+            document.querySelectorAll('[data-ko]').forEach(el => {
+                const text = currentLang === 'ko' ? el.getAttribute('data-ko') : el.getAttribute('data-en');
+                el.innerHTML = text;
+            });
+            document.querySelectorAll('[data-placeholder-ko]').forEach(el => {
+                const ph = currentLang === 'ko' ? el.getAttribute('data-placeholder-ko') : el.getAttribute('data-placeholder-en');
+                el.setAttribute('placeholder', ph);
+            });
+            langToggleBtn.textContent = currentLang === 'ko' ? 'EN' : 'KO';
+        }
+
+        langToggleBtn.addEventListener('click', () => {
+            currentLang = currentLang === 'ko' ? 'en' : 'ko';
+            localStorage.setItem('lang', currentLang);
+            updateLanguageUI();
+            renderMessages();
+        });
+
+        // 테마 관리
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        function updateIcon() {
+            if (document.documentElement.classList.contains('dark')) {
+                themeToggleIcon.className = 'fa-solid fa-sun text-amber-400';
+            } else {
+                themeToggleIcon.className = 'fa-solid fa-moon';
+            }
+        }
+        updateIcon();
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            updateIcon();
+        });
+
+        // 스크롤 프로그레스
+        window.addEventListener('scroll', () => {
+            const scrollBar = document.getElementById('scroll-progress');
+            const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+            if (totalScroll > 0) {
+                const scrolled = (window.scrollY / totalScroll) * 100;
+                scrollBar.style.width = scrolled + '%';
+            } else {
+                scrollBar.style.width = '0%';
+            }
+        });
+
+        // 커스텀 커서
+        const cursorDot = document.getElementById('custom-cursor-dot');
+        const cursorOutline = document.getElementById('custom-cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+            cursorOutline.animate({
+                left: `${e.clientX}px`,
+                top: `${e.clientY}px`
+            }, { duration: 240, fill: 'forwards' });
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursorDot.style.opacity = '0';
+            cursorOutline.style.opacity = '0';
+        });
+        document.addEventListener('mouseenter', () => {
+            cursorDot.style.opacity = '1';
+            cursorOutline.style.opacity = '1';
+        });
+
+        const interactives = document.querySelectorAll('a, button, .cursor-pointer, input, textarea');
+        interactives.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorOutline.classList.add('scale-150', 'bg-[#0064ff]/10', 'dark:bg-blue-400/10', 'border-[#0064ff]', 'dark:border-blue-400');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorOutline.classList.remove('scale-150', 'bg-[#0064ff]/10', 'dark:bg-blue-400/10', 'border-[#0064ff]', 'dark:border-blue-400');
+            });
+        });
+
+        // 파티클 배경
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const maxParticles = 65;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.6;
+                this.vy = (Math.random() - 0.5) * 0.6;
+                this.radius = Math.random() * 4 + 2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                const isDark = document.documentElement.classList.contains('dark');
+                ctx.fillStyle = isDark ? 'rgba(59, 130, 246, 0.75)' : 'rgba(0, 100, 255, 0.6)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < maxParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const isDark = document.documentElement.classList.contains('dark');
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 130) {
+                        ctx.strokeStyle = isDark 
+                            ? `rgba(59, 130, 246, ${0.5 * (1 - dist / 130)})` 
+                            : `rgba(0, 100, 255, ${0.4 * (1 - dist / 130)})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.onload = function() {
+            updateLanguageUI();
+            renderMessages();
+            animateParticles();
+        };
+    </script>
+</body>
+</html>
